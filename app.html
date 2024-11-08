@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Repository File Viewer</title>
+    <style>
+        .timer {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    background-color: #f6f8fa;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    margin: 0 4px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+}
+
+.timer.running {
+    background-color: #dafbe1;
+    border-color: #54aeff;
+}
+
+.timer.finished {
+    background-color: #ffebe9;
+    border-color: #cf222e;
+}
+
+.timer-button {
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid #d0d7de;
+    background-color: white;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.timer-button:hover {
+    background-color: #f3f4f6;
+}
+
+.timer-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #f6f8fa;
+            min-height: 100vh;
+        }
+
+        .container {
+            display: grid;
+            gap: 12px;
+            padding: 12px;
+            height: 100vh;
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                grid-template-columns: 300px 1fr;
+                padding: 20px;
+            }
+        }
+
+        .header {
+            padding: 8px 0;
+        }
+
+        @media (min-width: 768px) {
+            .header {
+                grid-column: 1 / -1;
+            }
+        }
+
+        h1 {
+            color: #24292e;
+            font-size: 1.5rem;
+            margin-bottom: 4px;
+        }
+
+        .subtitle {
+            color: #57606a;
+            font-size: 0.9rem;
+        }
+
+        #file-list, #file-content {
+            background-color: white;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            height: calc(50vh - 80px);
+            overflow-y: auto;
+        }
+
+        @media (min-width: 768px) {
+            #file-list, #file-content {
+                height: calc(100vh - 100px);
+            }
+        }
+
+        .panel-header {
+            position: sticky;
+            top: 0;
+            background-color: #f6f8fa;
+            padding: 12px;
+            border-bottom: 1px solid #e1e4e8;
+            font-weight: 600;
+            z-index: 10;
+        }
+
+        .panel-content {
+            padding: 12px;
+        }
+
+        #file-content {
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            line-height: 1.5;
+            font-size: 0.9rem;
+            height: calc(100vh - 100px);
+        }
+
+        @media (max-width: 767px) {
+            #file-content {
+                font-size: 0.8rem;
+            }
+        }
+
+        .file-entry {
+            margin: 4px 0;
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 767px) {
+            .file-entry {
+                padding: 12px 8px;
+                font-size: 1rem;
+            }
+        }
+
+        .file-entry:hover {
+            background-color: #f1f8ff;
+        }
+
+        .file-entry.selected {
+            background-color: #e1e4e8;
+        }
+
+        .directory {
+            color: #54aeff;
+            cursor: default;
+        }
+
+        .loading {
+            color: #666;
+            font-style: italic;
+            padding: 12px;
+        }
+
+        .error {
+            color: #cf222e;
+            padding: 8px;
+            background-color: #ffebe9;
+            border-radius: 4px;
+            margin: 8px;
+        }
+
+        /* Mobile tab-like navigation */
+        .mobile-tabs {
+            display: none;
+            margin-bottom: 8px;
+        }
+
+        @media (max-width: 767px) {
+            .mobile-tabs {
+                display: flex;
+                gap: 8px;
+            }
+
+            .tab {
+                padding: 8px 16px;
+                background-color: #f6f8fa;
+                border: 1px solid #e1e4e8;
+                border-radius: 6px;
+                cursor: pointer;
+                flex: 1;
+                text-align: center;
+                font-size: 0.9rem;
+            }
+
+            .tab.active {
+                background-color: white;
+                border-color: #0969da;
+                color: #0969da;
+            }
+
+            .panel {
+                display: none;
+            }
+
+            .panel.active {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>GitHub Repository File Viewer</h1>
+            <div class="subtitle">Viewing: tommy-mor/rcp</div>
+        </div>
+
+        <div class="mobile-tabs">
+            <div class="tab active" data-panel="file-list">Files</div>
+            <div class="tab" data-panel="file-content">Content</div>
+        </div>
+
+        <div id="file-list" class="panel active">
+            <div class="panel-header">Repository Contents</div>
+            <div class="panel-content">
+                <div id="files" class="loading">Loading repository contents...</div>
+            </div>
+        </div>
+
+        <div id="file-content" class="panel">
+            <div class="panel-header">File Content</div>
+            <div class="panel-content">
+                Select a file to view its contents...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const GITHUB_API_URL = 'https://api.github.com/repos/tommy-mor/rcp/contents';
+        const filesDiv = document.getElementById('files');
+        const contentDiv = document.getElementById('file-content');
+        let selectedEntry = null;
+
+        // Mobile tab handling
+        const tabs = document.querySelectorAll('.tab');
+        const panels = document.querySelectorAll('.panel');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Update tab states
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                // Update panel states
+                panels.forEach(p => p.classList.remove('active'));
+                const targetPanel = document.getElementById(tab.dataset.panel);
+                targetPanel.classList.add('active');
+            });
+        });
+
+        async function fetchFileContent(url, fileName) {
+            try {
+                const contentPanel = document.querySelector('#file-content .panel-content');
+                contentPanel.textContent = 'Loading file content...';
+                
+                // Update header
+                document.querySelector('#file-content .panel-header').textContent = fileName;
+
+                // Switch to content tab on mobile
+                if (window.innerWidth < 768) {
+                    tabs[1].click();
+                }
+
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const text = await response.text();
+                contentPanel.textContent = '';
+                contentPanel.appendChild(parseTimerBlocks(text));
+            } catch (error) {
+                contentPanel.innerHTML = `<div class="error">Error fetching file content: ${error.message}</div>`;
+            }
+        }
+
+        function createFileEntry(item) {
+            const entry = document.createElement('div');
+            entry.className = 'file-entry';
+            entry.innerHTML = `${item.type === 'file' ? '📄' : '📁'} ${item.name}`;
+            
+            if (item.type === 'file') {
+                entry.addEventListener('click', async () => {
+                    if (selectedEntry) {
+                        selectedEntry.classList.remove('selected');
+                    }
+                    entry.classList.add('selected');
+                    selectedEntry = entry;
+
+                    await fetchFileContent(item.download_url, item.name);
+                });
+            } else {
+                entry.classList.add('directory');
+            }
+            
+            return entry;
+        }
+
+        async function fetchRepositoryFiles() {
+            try {
+                const response = await fetch(GITHUB_API_URL, {
+                    headers: {
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                filesDiv.innerHTML = '';
+                
+                data.sort((a, b) => {
+                    if (a.type !== b.type) {
+                        return a.type === 'dir' ? -1 : 1;
+                    }
+                    return a.name.localeCompare(b.name);
+                });
+
+                data.forEach(item => {
+                    filesDiv.appendChild(createFileEntry(item));
+                });
+
+            } catch (error) {
+                filesDiv.innerHTML = `<div class="error">Error fetching repository contents: ${error.message}</div>`;
+            }
+        }
+
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+function playSound(frequency, duration, type = 'sine') {
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.type = type;
+    oscillator.frequency.value = frequency;
+    
+    gainNode.gain.value = 0.1;
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + duration);
+}
+
+function playStartSound() {
+    playSound(660, 0.1, 'sine');
+    setTimeout(() => playSound(880, 0.1, 'sine'), 100);
+}
+
+function playStopSound() {
+    playSound(440, 0.1, 'sine');
+    setTimeout(() => playSound(330, 0.1, 'sine'), 100);
+}
+
+function playFinishSound() {
+    for (let i = 0; i < 3; i++) {
+        setTimeout(() => {
+            playSound(880, 0.1, 'sine');
+            setTimeout(() => playSound(660, 0.1, 'sine'), 100);
+        }, i * 300);
+    }
+}
+
+class Timer {
+    constructor(minutes, label) {
+        this.totalSeconds = minutes * 60;
+        this.remainingSeconds = this.totalSeconds;
+        this.label = label;
+        this.interval = null;
+        this.element = this.createTimerElement();
+    }
+
+    createTimerElement() {
+        const timerDiv = document.createElement('div');
+        timerDiv.className = 'timer';
+        timerDiv.innerHTML = `
+            <span>${this.label}</span>
+            <span class="time">${this.formatTime()}</span>
+            <button class="timer-button">Start</button>
+        `;
+
+        const button = timerDiv.querySelector('button');
+        button.addEventListener('click', () => this.toggle());
+
+        return timerDiv;
+    }
+
+    formatTime() {
+        const minutes = Math.floor(this.remainingSeconds / 60);
+        const seconds = this.remainingSeconds % 60;
+        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    toggle() {
+        if (this.interval) {
+            this.pause();
+        } else {
+            this.start();
+        }
+    }
+
+    start() {
+        if (!this.interval) {
+            playStartSound();
+            this.element.classList.add('running');
+            this.element.querySelector('button').textContent = 'Pause';
+            this.interval = setInterval(() => this.tick(), 1000);
+        }
+    }
+
+    pause() {
+        if (this.interval) {
+            playStopSound();
+            this.element.classList.remove('running');
+            this.element.querySelector('button').textContent = 'Start';
+            clearInterval(this.interval);
+            this.interval = null;
+        }
+    }
+
+    tick() {
+        this.remainingSeconds--;
+        this.element.querySelector('.time').textContent = this.formatTime();
+
+        if (this.remainingSeconds <= 0) {
+            this.finish();
+        }
+    }
+
+    finish() {
+        this.pause();
+        playFinishSound();
+        this.element.classList.add('finished');
+        this.element.querySelector('button').textContent = 'Done';
+        this.element.querySelector('button').disabled = true;
+    }
+}
+
+// Function to parse and replace timer blocks in text
+function parseTimerBlocks(text) {
+    const regex = /\[timer\s+(\d+)m\s+([^\]]+)\]/g;
+    const fragment = document.createDocumentFragment();
+    let lastIndex = 0;
+
+    text.replace(regex, (match, minutes, label, offset) => {
+        // Add text before the timer
+        if (offset > lastIndex) {
+            fragment.appendChild(document.createTextNode(text.slice(lastIndex, offset)));
+        }
+
+        // Create and add the timer
+        const timer = new Timer(parseInt(minutes), label);
+        fragment.appendChild(timer.element);
+
+        lastIndex = offset + match.length;
+    });
+
+    // Add remaining text
+    if (lastIndex < text.length) {
+        fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
+    }
+
+    return fragment;
+}
+
+        // Execute the function when the page loads
+        fetchRepositoryFiles();
+    </script>
+</body>
+</html>
