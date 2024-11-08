@@ -1,0 +1,7 @@
+this is a test recipe
+
+[timer 10s test timer]
+
+[timer 1m30s test timer 2]
+
+blah blah blah
