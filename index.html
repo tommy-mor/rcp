@@ -399,6 +399,7 @@
                 this.remainingSeconds = this.totalSeconds;
                 this.label = label;
                 this.interval = null;
+                this.finishInterval = null;
                 this.element = this.createTimerElement();
             }
 
@@ -461,16 +462,33 @@
 
             finish() {
                 this.pause();
-                playFinishSound();
                 this.element.classList.add('finished');
-                this.element.querySelector('button').textContent = 'Done';
-                this.element.querySelector('button').disabled = true;
+                
+                // Change button text to OK and keep it enabled
+                const button = this.element.querySelector('button');
+                button.textContent = 'OK';
+                button.disabled = false;
+                
+                playFinishSound();
+                // Start playing repeating sound
+                this.finishInterval = setInterval(() => {
+                    playFinishSound();
+                }, 3000);  // Repeat every second
+
+                // Update button click handler
+                button.onclick = () => {
+                    clearInterval(this.finishInterval);
+                    clearInterval(this.interval);
+                    button.disabled = true;
+                    button.textContent = 'Done';
+                    button.onclick = null;
+                };
             }
         }
 
         // Function to parse and replace timer blocks in text
         function parseTimerBlocks(text) {
-            const regex = /\[timer\s+(\d+)m(?:\s*(\d+)s)?\s+([^\]]+)\]/g;
+            const regex = /\[timer\s+(?:(\d+)m\s*)?(?:(\d+)s)?\s+([^\]]+)\]/g;
             const fragment = document.createDocumentFragment();
             let lastIndex = 0;
 
