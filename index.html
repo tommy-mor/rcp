@@ -6,44 +6,44 @@
     <title>GitHub Repository File Viewer</title>
     <style>
         .timer {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 4px 8px;
-    background-color: #f6f8fa;
-    border: 1px solid #d0d7de;
-    border-radius: 6px;
-    margin: 0 4px;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-}
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 8px;
+            background-color: #f6f8fa;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            margin: 0 4px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+        }
 
-.timer.running {
-    background-color: #dafbe1;
-    border-color: #54aeff;
-}
+        .timer.running {
+            background-color: #dafbe1;
+            border-color: #54aeff;
+        }
 
-.timer.finished {
-    background-color: #ffebe9;
-    border-color: #cf222e;
-}
+        .timer.finished {
+            background-color: #ffebe9;
+            border-color: #cf222e;
+        }
 
-.timer-button {
-    padding: 2px 8px;
-    border-radius: 4px;
-    border: 1px solid #d0d7de;
-    background-color: white;
-    cursor: pointer;
-    font-size: 0.9rem;
-}
+        .timer-button {
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid #d0d7de;
+            background-color: white;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
 
-.timer-button:hover {
-    background-color: #f3f4f6;
-}
+        .timer-button:hover {
+            background-color: #f3f4f6;
+        }
 
-.timer-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
+        .timer-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
 
         * {
             box-sizing: border-box;
@@ -94,7 +94,8 @@
             font-size: 0.9rem;
         }
 
-        #file-list, #file-content {
+        #file-list,
+        #file-content {
             background-color: white;
             border: 1px solid #e1e4e8;
             border-radius: 6px;
@@ -103,7 +104,9 @@
         }
 
         @media (min-width: 768px) {
-            #file-list, #file-content {
+
+            #file-list,
+            #file-content {
                 height: calc(100vh - 100px);
             }
         }
@@ -221,6 +224,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="header">
@@ -275,7 +279,7 @@
             try {
                 const contentPanel = document.querySelector('#file-content .panel-content');
                 contentPanel.textContent = 'Loading file content...';
-                
+
                 // Update header
                 document.querySelector('#file-content .panel-header').textContent = fileName;
 
@@ -285,7 +289,7 @@
                 }
 
                 const response = await fetch(url);
-                
+
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -302,7 +306,7 @@
             const entry = document.createElement('div');
             entry.className = 'file-entry';
             entry.innerHTML = `${item.type === 'file' ? '📄' : '📁'} ${item.name}`;
-            
+
             if (item.type === 'file') {
                 entry.addEventListener('click', async () => {
                     if (selectedEntry) {
@@ -316,7 +320,7 @@
             } else {
                 entry.classList.add('directory');
             }
-            
+
             return entry;
         }
 
@@ -334,7 +338,7 @@
 
                 const data = await response.json();
                 filesDiv.innerHTML = '';
-                
+
                 data.sort((a, b) => {
                     if (a.type !== b.type) {
                         return a.type === 'dir' ? -1 : 1;
@@ -353,146 +357,147 @@
 
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
-function playSound(frequency, duration, type = 'sine') {
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.type = type;
-    oscillator.frequency.value = frequency;
-    
-    gainNode.gain.value = 0.1;
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    oscillator.start();
-    oscillator.stop(audioContext.currentTime + duration);
-}
+        function playSound(frequency, duration, type = 'sine') {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
 
-function playStartSound() {
-    playSound(660, 0.1, 'sine');
-    setTimeout(() => playSound(880, 0.1, 'sine'), 100);
-}
+            oscillator.type = type;
+            oscillator.frequency.value = frequency;
 
-function playStopSound() {
-    playSound(440, 0.1, 'sine');
-    setTimeout(() => playSound(330, 0.1, 'sine'), 100);
-}
+            gainNode.gain.value = 0.1;
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
 
-function playFinishSound() {
-    for (let i = 0; i < 3; i++) {
-        setTimeout(() => {
-            playSound(880, 0.1, 'sine');
-            setTimeout(() => playSound(660, 0.1, 'sine'), 100);
-        }, i * 300);
-    }
-}
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
 
-class Timer {
-    constructor(minutes, label) {
-        this.totalSeconds = minutes * 60;
-        this.remainingSeconds = this.totalSeconds;
-        this.label = label;
-        this.interval = null;
-        this.element = this.createTimerElement();
-    }
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + duration);
+        }
 
-    createTimerElement() {
-        const timerDiv = document.createElement('div');
-        timerDiv.className = 'timer';
-        timerDiv.innerHTML = `
+        function playStartSound() {
+            playSound(660, 0.1, 'sine');
+            setTimeout(() => playSound(880, 0.1, 'sine'), 100);
+        }
+
+        function playStopSound() {
+            playSound(440, 0.1, 'sine');
+            setTimeout(() => playSound(330, 0.1, 'sine'), 100);
+        }
+
+        function playFinishSound() {
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => {
+                    playSound(880, 0.1, 'sine');
+                    setTimeout(() => playSound(660, 0.1, 'sine'), 100);
+                }, i * 300);
+            }
+        }
+
+        class Timer {
+            constructor(minutes, label) {
+                this.totalSeconds = minutes * 60;
+                this.remainingSeconds = this.totalSeconds;
+                this.label = label;
+                this.interval = null;
+                this.element = this.createTimerElement();
+            }
+
+            createTimerElement() {
+                const timerDiv = document.createElement('div');
+                timerDiv.className = 'timer';
+                timerDiv.innerHTML = `
             <span>${this.label}</span>
             <span class="time">${this.formatTime()}</span>
             <button class="timer-button">Start</button>
         `;
 
-        const button = timerDiv.querySelector('button');
-        button.addEventListener('click', () => this.toggle());
+                const button = timerDiv.querySelector('button');
+                button.addEventListener('click', () => this.toggle());
 
-        return timerDiv;
-    }
+                return timerDiv;
+            }
 
-    formatTime() {
-        const minutes = Math.floor(this.remainingSeconds / 60);
-        const seconds = this.remainingSeconds % 60;
-        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-    }
+            formatTime() {
+                const minutes = Math.floor(this.remainingSeconds / 60);
+                const seconds = this.remainingSeconds % 60;
+                return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }
 
-    toggle() {
-        if (this.interval) {
-            this.pause();
-        } else {
-            this.start();
-        }
-    }
+            toggle() {
+                if (this.interval) {
+                    this.pause();
+                } else {
+                    this.start();
+                }
+            }
 
-    start() {
-        if (!this.interval) {
-            playStartSound();
-            this.element.classList.add('running');
-            this.element.querySelector('button').textContent = 'Pause';
-            this.interval = setInterval(() => this.tick(), 1000);
-        }
-    }
+            start() {
+                if (!this.interval) {
+                    playStartSound();
+                    this.element.classList.add('running');
+                    this.element.querySelector('button').textContent = 'Pause';
+                    this.interval = setInterval(() => this.tick(), 1000);
+                }
+            }
 
-    pause() {
-        if (this.interval) {
-            playStopSound();
-            this.element.classList.remove('running');
-            this.element.querySelector('button').textContent = 'Start';
-            clearInterval(this.interval);
-            this.interval = null;
-        }
-    }
+            pause() {
+                if (this.interval) {
+                    playStopSound();
+                    this.element.classList.remove('running');
+                    this.element.querySelector('button').textContent = 'Start';
+                    clearInterval(this.interval);
+                    this.interval = null;
+                }
+            }
 
-    tick() {
-        this.remainingSeconds--;
-        this.element.querySelector('.time').textContent = this.formatTime();
+            tick() {
+                this.remainingSeconds--;
+                this.element.querySelector('.time').textContent = this.formatTime();
 
-        if (this.remainingSeconds <= 0) {
-            this.finish();
-        }
-    }
+                if (this.remainingSeconds <= 0) {
+                    this.finish();
+                }
+            }
 
-    finish() {
-        this.pause();
-        playFinishSound();
-        this.element.classList.add('finished');
-        this.element.querySelector('button').textContent = 'Done';
-        this.element.querySelector('button').disabled = true;
-    }
-}
-
-// Function to parse and replace timer blocks in text
-function parseTimerBlocks(text) {
-    const regex = /\[timer\s+(\d+)m\s+([^\]]+)\]/g;
-    const fragment = document.createDocumentFragment();
-    let lastIndex = 0;
-
-    text.replace(regex, (match, minutes, label, offset) => {
-        // Add text before the timer
-        if (offset > lastIndex) {
-            fragment.appendChild(document.createTextNode(text.slice(lastIndex, offset)));
+            finish() {
+                this.pause();
+                playFinishSound();
+                this.element.classList.add('finished');
+                this.element.querySelector('button').textContent = 'Done';
+                this.element.querySelector('button').disabled = true;
+            }
         }
 
-        // Create and add the timer
-        const timer = new Timer(parseInt(minutes), label);
-        fragment.appendChild(timer.element);
+        // Function to parse and replace timer blocks in text
+        function parseTimerBlocks(text) {
+            const regex = /\[timer\s+(\d+)m\s+([^\]]+)\]/g;
+            const fragment = document.createDocumentFragment();
+            let lastIndex = 0;
 
-        lastIndex = offset + match.length;
-    });
+            text.replace(regex, (match, minutes, label, offset) => {
+                // Add text before the timer
+                if (offset > lastIndex) {
+                    fragment.appendChild(document.createTextNode(text.slice(lastIndex, offset)));
+                }
 
-    // Add remaining text
-    if (lastIndex < text.length) {
-        fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
-    }
+                // Create and add the timer
+                const timer = new Timer(parseInt(minutes), label);
+                fragment.appendChild(timer.element);
 
-    return fragment;
-}
+                lastIndex = offset + match.length;
+            });
+
+            // Add remaining text
+            if (lastIndex < text.length) {
+                fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
+            }
+
+            return fragment;
+        }
 
         // Execute the function when the page loads
         fetchRepositoryFiles();
     </script>
 </body>
+
 </html>
