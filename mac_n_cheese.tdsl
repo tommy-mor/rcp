@@ -3,7 +3,7 @@ CLASSIC BAKED MACARONI AND CHEESE
 [ingredients]
 Breadcrumb Topping:
 [topping.butter] 2 tablespoons unsalted butter
-[topping.bread] 6 slices good white bread, crusts removed, torn into ¼- to ½-inch pieces
+[topping.bread] 6 slices good white bread
 
 Sauce & Pasta:
 [sauce.butter] 6 tablespoons unsalted butter
@@ -14,7 +14,7 @@ Sauce & Pasta:
 [sauce.black_pepper] ¼ teaspoon freshly ground black pepper
 [sauce.cayenne] ¼ teaspoon cayenne pepper
 [sauce.cheddar] 4½ cups grated sharp white cheddar cheese (18 ounces)
-[sauce.gruyere] 2 cups grated Gruyere cheese (8 ounces) or [sauce.pecorino] 1¼ cups Pecorino Romano (5 ounces)
+[sauce.gruyere] 2 cups grated Gruyere cheese (8 ounces)
 [pasta.macaroni] 1 pound elbow macaroni
 [/ingredients]
 
@@ -22,6 +22,9 @@ INSTRUCTIONS:
 Prep:
 Heat oven to 375°F
 Butter 3-quart casserole dish
+Remove crusts from [topping.bread] and tear into ¼- to ½-inch pieces
+Grate [sauce.cheddar] (should yield 4½ cups)
+Grate [sauce.gruyere] (should yield 2 cups)
 
 Breadcrumbs:
 Melt [topping.butter] over medium heat
