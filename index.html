@@ -645,26 +645,30 @@
 
             text.replace(regex, (match, minutes, seconds, label, offset) => {
                 if (offset > lastIndex) {
-                    const div = document.createElement('div');
-                    div.innerHTML = text.slice(lastIndex, offset);
-                    addMobileTooltipListeners(div);
-                    fragment.appendChild(div);
+                    // Create a text node instead of a div for inline flow
+                    const textNode = document.createElement('span');
+                    textNode.innerHTML = text.slice(lastIndex, offset);
+                    addMobileTooltipListeners(textNode);
+                    fragment.appendChild(textNode);
                 }
 
                 minutes = parseInt(minutes) || 0;
                 seconds = parseInt(seconds) || 0;
 
                 const timer = new Timer(minutes, seconds, label);
+                // Make the timer display inline
+                timer.element.style.verticalAlign = 'middle';
                 fragment.appendChild(timer.element);
 
                 lastIndex = offset + match.length;
             });
 
             if (lastIndex < text.length) {
-                const div = document.createElement('div');
-                div.innerHTML = text.slice(lastIndex);
-                addMobileTooltipListeners(div);
-                fragment.appendChild(div);
+                // Create a text node for remaining text
+                const textNode = document.createElement('span');
+                textNode.innerHTML = text.slice(lastIndex);
+                addMobileTooltipListeners(textNode);
+                fragment.appendChild(textNode);
             }
 
             return fragment;
