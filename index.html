@@ -234,13 +234,66 @@
         .ingredient-item {
             display: flex;
             align-items: center;
-            gap: 8px;
-            margin: 4px 0;
+            gap: 12px;
+            margin: 8px 0;
         }
 
         .ingredient-checkbox {
-            width: 16px;
-            height: 16px;
+            width: 24px;
+            height: 24px;
+            margin: 4px;
+            cursor: pointer;
+        }
+
+        .ingredient-reference {
+            text-decoration: underline dotted;
+            cursor: help;
+            position: relative;
+            color: #0969da;
+            display: inline;
+            white-space: normal;
+            padding: 0 2px;
+        }
+
+        .ingredient-reference::after {
+            content: attr(data-ingredient-text);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #f6f8fa;
+            padding: 4px 8px;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            font-size: 0.9em;
+            white-space: nowrap;
+            z-index: 100;
+            display: none;
+        }
+
+        .ingredient-reference:hover::after {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .ingredient-reference.showing-mobile-tooltip::after {
+                display: block;
+                position: fixed;
+                bottom: auto;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: #f6f8fa;
+                padding: 8px 16px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            }
+        }
+
+        /* Optional: Make the label text larger and more touch-friendly too */
+        .ingredient-item label {
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 4px 0;
         }
     </style>
 </head>
@@ -508,6 +561,9 @@
 
         // Function to parse and replace timer blocks in text
         function parseTimerBlocks(text) {
+            // Store ingredient definitions for later reference
+            const ingredientDefinitions = new Map();
+            
             // First parse ingredients section
             const ingredientsRegex = /\[ingredients\]([\s\S]*?)\[\/ingredients\]/g;
             const fragment = document.createDocumentFragment();
@@ -528,7 +584,10 @@
                 let ingredientMatch;
 
                 while ((ingredientMatch = ingredientRegex.exec(ingredientsContent)) !== null) {
-                    const [_, id, text] = ingredientMatch;
+                    const [_, id, ingredientText] = ingredientMatch;
+                    // Store the ingredient definition
+                    ingredientDefinitions.set(id, ingredientText.trim());
+                    
                     const itemDiv = document.createElement('div');
                     itemDiv.className = 'ingredient-item';
 
@@ -537,18 +596,16 @@
                     checkbox.className = 'ingredient-checkbox';
                     checkbox.id = id;
                     
-                    // Load saved state
                     const checked = localStorage.getItem(`ingredient-${id}`) === 'true';
                     checkbox.checked = checked;
 
-                    // Save state on change
                     checkbox.addEventListener('change', (e) => {
                         localStorage.setItem(`ingredient-${id}`, e.target.checked);
                     });
 
                     const label = document.createElement('label');
                     label.htmlFor = id;
-                    label.textContent = text;
+                    label.textContent = ingredientText;
 
                     itemDiv.appendChild(checkbox);
                     itemDiv.appendChild(label);
@@ -559,27 +616,29 @@
                 lastIndex = offset + match.length;
             });
 
-            // Now parse the rest of the text for timers
+            // Now parse the rest of the text for timers and ingredient references
             const remainingText = text.slice(lastIndex);
-            const timerFragment = parseTimersOnly(remainingText);
-            fragment.appendChild(timerFragment);
+            const processedFragment = parseTimersAndReferences(remainingText, ingredientDefinitions);
+            fragment.appendChild(processedFragment);
 
             return fragment;
         }
 
-        // Split out timer parsing into separate function
-        function parseTimersOnly(text) {
+        function parseTimersAndReferences(text, ingredientDefinitions) {
             // First handle ingredient references
             const ingredientRefRegex = /\[([\w.]+)\]/g;
             text = text.replace(ingredientRefRegex, (match, id) => {
-                const checked = localStorage.getItem(`ingredient-${id}`) === 'true';
-                return `<input type="checkbox" class="ingredient-checkbox" 
-                    ${checked ? 'checked' : ''} 
+                const ingredientText = ingredientDefinitions.get(id);
+                if (!ingredientText) return match;
+                
+                return `<span class="ingredient-reference" 
                     data-ingredient-id="${id}" 
-                    style="margin: 0 4px;">`;
+                    data-ingredient-text="${ingredientText}">
+                    ${id.split('.').pop()}
+                </span>`;
             });
 
-            // Then handle timers as before
+            // Handle timers as before
             const regex = /\[timer\s+(?:(\d+)m\s*)?(?:(\d+)s)?\s+([^\]]+)\]/g;
             const fragment = document.createDocumentFragment();
             let lastIndex = 0;
@@ -588,16 +647,7 @@
                 if (offset > lastIndex) {
                     const div = document.createElement('div');
                     div.innerHTML = text.slice(lastIndex, offset);
-                    // Add event listeners to any checkboxes
-                    div.querySelectorAll('.ingredient-checkbox').forEach(checkbox => {
-                        checkbox.addEventListener('change', (e) => {
-                            const id = e.target.dataset.ingredientId;
-                            localStorage.setItem(`ingredient-${id}`, e.target.checked);
-                            // Update all checkboxes with same ingredient id
-                            document.querySelectorAll(`[data-ingredient-id="${id}"]`)
-                                .forEach(cb => cb.checked = e.target.checked);
-                        });
-                    });
+                    addMobileTooltipListeners(div);
                     fragment.appendChild(div);
                 }
 
@@ -613,20 +663,38 @@
             if (lastIndex < text.length) {
                 const div = document.createElement('div');
                 div.innerHTML = text.slice(lastIndex);
-                // Add event listeners to any remaining checkboxes
-                div.querySelectorAll('.ingredient-checkbox').forEach(checkbox => {
-                    checkbox.addEventListener('change', (e) => {
-                        const id = e.target.dataset.ingredientId;
-                        localStorage.setItem(`ingredient-${id}`, e.target.checked);
-                        // Update all checkboxes with same ingredient id
-                        document.querySelectorAll(`[data-ingredient-id="${id}"]`)
-                            .forEach(cb => cb.checked = e.target.checked);
-                    });
-                });
+                addMobileTooltipListeners(div);
                 fragment.appendChild(div);
             }
 
             return fragment;
+        }
+
+        function addMobileTooltipListeners(element) {
+            element.querySelectorAll('.ingredient-reference').forEach(ref => {
+                ref.addEventListener('click', (e) => {
+                    if (window.innerWidth <= 768) {
+                        // Remove any existing mobile tooltips
+                        document.querySelectorAll('.showing-mobile-tooltip')
+                            .forEach(el => el.classList.remove('showing-mobile-tooltip'));
+                        
+                        // Show this tooltip
+                        ref.classList.add('showing-mobile-tooltip');
+                        
+                        // Hide tooltip when clicking anywhere else
+                        const hideTooltip = (event) => {
+                            if (!ref.contains(event.target)) {
+                                ref.classList.remove('showing-mobile-tooltip');
+                                document.removeEventListener('click', hideTooltip);
+                            }
+                        };
+                        
+                        setTimeout(() => {
+                            document.addEventListener('click', hideTooltip);
+                        }, 0);
+                    }
+                });
+            });
         }
 
         // Execute the function when the page loads
