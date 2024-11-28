@@ -1,39 +1,42 @@
 SHEET PAN TOFU WITH RICE (4-5 servings)
-INGREDIENTS:
+
+[ingredients]
 Rice:
 
-1.5 cups white rice
-2.25 cups water
-½ tsp salt
+[rice.rice] 1.5 cups white rice
+[rice.water] 2.25 cups water
+[rice.salt] ½ tsp salt
 
 Main:
 
-2 (14oz) firm tofu blocks, each cut into 3 thick slices
-1 large bell pepper
-2 large shallots
-1 tbsp fresh sage
-½ cup cilantro
-4 garlic cloves
+[main.tofu] 2 (14oz) firm tofu blocks, each cut into 3 thick slices
+[main.pepper] 1 large bell pepper
+[main.shallots] 2 large shallots
+[main.sage] 1 tbsp fresh sage
+[main.cilantro] ½ cup cilantro
+[main.garlic] 4 garlic cloves
 
 Sauce:
 
-¼ cup soy sauce
-5 tbsp olive oil, divided
-1½ tbsp apple cider vinegar
-1½ tbsp honey
-½ tsp kosher salt
+[sauce.soy] ¼ cup soy sauce
+[sauce.oil] 5 tbsp olive oil, divided
+[sauce.vinegar] 1½ tbsp apple cider vinegar
+[sauce.honey] 1½ tbsp honey
+[sauce.salt] ½ tsp kosher salt
+
+[/ingredients]
 
 INSTRUCTIONS:
 Prep (10-15 mins):
 
-Start rice: Combine rice, water, salt. Bring to boil at high heat, reduce to lowest, cover and cook 15-18 mins. [timer 17m30s cook rice] Don't lift lid. Rest 10 mins after cooking.
+Start rice: Combine [rice.rice], [rice.water], [rice.salt]. Bring to boil at high heat, reduce to lowest, cover and cook 15-18 mins. [timer 17m30s cook rice] Don't lift lid. Rest 10 mins after cooking.
 Chop:
 
-Cut each tofu block into 3 thick slices
-Slice bell pepper into ½" strips
-Quarter the shallots
-Mince garlic
-Chop sage and cilantro
+Cut each [main.tofu] block into 3 thick slices
+Slice [main.pepper] into ½" strips
+Quarter [main.shallots]
+Mince [main.garlic]
+Chop [main.sage] and [main.cilantro]
 
 
 Heat oven to 400°F (set to 7-8/10 for gas, 8-9/10 for electric)
@@ -41,10 +44,11 @@ Heat oven to 400°F (set to 7-8/10 for gas, 8-9/10 for electric)
 Cooking:
 
 Drain tofu: Place between towels, weight with cutting board, 10-30 mins [timer 20m drain tofu]
-Make sauce: Combine soy sauce, 3 tbsp olive oil, vinegar, honey, garlic, coriander. Set aside ¼ of sauce for serving.
-Season vegetables: Toss pepper and shallots with 2 tbsp oil, paprika, salt, allspice, cayenne. Roast 15 mins. [timer 15m roast veggies]
-Add tofu: Season tofu with salt/pepper, coat with ¾ of sauce. Add to pan with vegetables.
+
+Make sauce: Combine [sauce.soy], 3 tbsp [sauce.oil], [sauce.vinegar], [sauce.honey], [main.garlic], [main.coriander]. Set aside ¼ of sauce for serving.
+Season vegetables: Toss [main.pepper] and [main.shallots] with 2 tbsp [sauce.oil], paprika, [sauce.salt], allspice, cayenne. Roast 15 mins. [timer 15m roast veggies]
+Add tofu: Season [main.tofu] with salt/pepper, coat with ¾ of sauce. Add to pan with vegetables.
 Final bake: 35-40 mins, tossing vegetables halfway through. [timer 20m 1st bake] [timer 20m 2nd bake]
 
-Serve: Layer rice, tofu and vegetables, drizzle with reserved sauce, top with cilantro.
+Serve: Layer rice, tofu and vegetables, drizzle with reserved sauce, top with [main.cilantro].
 Total time: ~1 hour

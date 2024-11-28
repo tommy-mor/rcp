@@ -222,6 +222,26 @@
                 display: block;
             }
         }
+
+        /* Add these new styles */
+        .ingredients-section {
+            background-color: #f0f7ff;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 8px 0;
+        }
+
+        .ingredient-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 4px 0;
+        }
+
+        .ingredient-checkbox {
+            width: 16px;
+            height: 16px;
+        }
     </style>
 </head>
 
@@ -488,17 +508,99 @@
 
         // Function to parse and replace timer blocks in text
         function parseTimerBlocks(text) {
+            // First parse ingredients section
+            const ingredientsRegex = /\[ingredients\]([\s\S]*?)\[\/ingredients\]/g;
+            const fragment = document.createDocumentFragment();
+            let lastIndex = 0;
+
+            text.replace(ingredientsRegex, (match, ingredientsContent, offset) => {
+                // Add text before ingredients
+                if (offset > lastIndex) {
+                    fragment.appendChild(document.createTextNode(text.slice(lastIndex, offset)));
+                }
+
+                // Create ingredients section
+                const ingredientsDiv = document.createElement('div');
+                ingredientsDiv.className = 'ingredients-section';
+
+                // Parse individual ingredients
+                const ingredientRegex = /\[([\w.]+)\]\s+([^\n]+)/g;
+                let ingredientMatch;
+
+                while ((ingredientMatch = ingredientRegex.exec(ingredientsContent)) !== null) {
+                    const [_, id, text] = ingredientMatch;
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'ingredient-item';
+
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.className = 'ingredient-checkbox';
+                    checkbox.id = id;
+                    
+                    // Load saved state
+                    const checked = localStorage.getItem(`ingredient-${id}`) === 'true';
+                    checkbox.checked = checked;
+
+                    // Save state on change
+                    checkbox.addEventListener('change', (e) => {
+                        localStorage.setItem(`ingredient-${id}`, e.target.checked);
+                    });
+
+                    const label = document.createElement('label');
+                    label.htmlFor = id;
+                    label.textContent = text;
+
+                    itemDiv.appendChild(checkbox);
+                    itemDiv.appendChild(label);
+                    ingredientsDiv.appendChild(itemDiv);
+                }
+
+                fragment.appendChild(ingredientsDiv);
+                lastIndex = offset + match.length;
+            });
+
+            // Now parse the rest of the text for timers
+            const remainingText = text.slice(lastIndex);
+            const timerFragment = parseTimersOnly(remainingText);
+            fragment.appendChild(timerFragment);
+
+            return fragment;
+        }
+
+        // Split out timer parsing into separate function
+        function parseTimersOnly(text) {
+            // First handle ingredient references
+            const ingredientRefRegex = /\[([\w.]+)\]/g;
+            text = text.replace(ingredientRefRegex, (match, id) => {
+                const checked = localStorage.getItem(`ingredient-${id}`) === 'true';
+                return `<input type="checkbox" class="ingredient-checkbox" 
+                    ${checked ? 'checked' : ''} 
+                    data-ingredient-id="${id}" 
+                    style="margin: 0 4px;">`;
+            });
+
+            // Then handle timers as before
             const regex = /\[timer\s+(?:(\d+)m\s*)?(?:(\d+)s)?\s+([^\]]+)\]/g;
             const fragment = document.createDocumentFragment();
             let lastIndex = 0;
 
             text.replace(regex, (match, minutes, seconds, label, offset) => {
-                // Add text before the timer
                 if (offset > lastIndex) {
-                    fragment.appendChild(document.createTextNode(text.slice(lastIndex, offset)));
+                    const div = document.createElement('div');
+                    div.innerHTML = text.slice(lastIndex, offset);
+                    // Add event listeners to any checkboxes
+                    div.querySelectorAll('.ingredient-checkbox').forEach(checkbox => {
+                        checkbox.addEventListener('change', (e) => {
+                            const id = e.target.dataset.ingredientId;
+                            localStorage.setItem(`ingredient-${id}`, e.target.checked);
+                            // Update all checkboxes with same ingredient id
+                            document.querySelectorAll(`[data-ingredient-id="${id}"]`)
+                                .forEach(cb => cb.checked = e.target.checked);
+                        });
+                    });
+                    fragment.appendChild(div);
                 }
 
-                // Create and add the timer
                 minutes = parseInt(minutes) || 0;
                 seconds = parseInt(seconds) || 0;
 
@@ -508,9 +610,20 @@
                 lastIndex = offset + match.length;
             });
 
-            // Add remaining text
             if (lastIndex < text.length) {
-                fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
+                const div = document.createElement('div');
+                div.innerHTML = text.slice(lastIndex);
+                // Add event listeners to any remaining checkboxes
+                div.querySelectorAll('.ingredient-checkbox').forEach(checkbox => {
+                    checkbox.addEventListener('change', (e) => {
+                        const id = e.target.dataset.ingredientId;
+                        localStorage.setItem(`ingredient-${id}`, e.target.checked);
+                        // Update all checkboxes with same ingredient id
+                        document.querySelectorAll(`[data-ingredient-id="${id}"]`)
+                            .forEach(cb => cb.checked = e.target.checked);
+                    });
+                });
+                fragment.appendChild(div);
             }
 
             return fragment;
